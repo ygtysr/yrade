@@ -25,3 +25,8 @@ class Market(ABC):
     def fetch_all_symbols(self):
         """Fetch all available trading symbols."""
         pass
+
+    @abstractmethod
+    async def fetch_klines_async(self, symbol, interval="15m", limit=150):
+        """Fetch historical kline data for a symbol asynchronously."""
+        pass

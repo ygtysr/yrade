@@ -1,4 +1,6 @@
 import logging
+import httpx
+import asyncio
 from .base import Market
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
@@ -10,6 +12,7 @@ class BinanceMarket(Market):
         logger.info("binance client is initializing..")
         self.client = Client(api_key, api_secret)
         logger.info("binance client is initialized succesfully..")
+        self.BASE_FAPI_URL = "https://fapi.binance.com"
 
 
     def fetch_order_book(self, symbol, depth=100):
@@ -40,5 +43,25 @@ class BinanceMarket(Market):
         except BinanceAPIException as e:
             print(f"Binance API Exception: {e}")
             return []
+
+    async def fetch_klines_async(self, symbol, interval="15m", limit=150):
+        """
+        Fetch historical kline data for a symbol asynchronously from Binance.
+        """
+        url = f"{self.BASE_FAPI_URL}/fapi/v1/klines"
+        params = {'symbol': symbol, 'interval': interval, 'limit': limit}
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, params=params)
+                response.raise_for_status()
+                return response.json()
+        except httpx.HTTPStatusError as e:
+            print(f"HTTP error occurred: {e}")
+        except httpx.RequestError as e:
+            print(f"Request error occurred: {e}")
+        except httpx.TimeoutException as e:
+            print(f"Timeout error occurred: {e}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
 
 
